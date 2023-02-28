@@ -3,7 +3,7 @@ import './App.css';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
-import {Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import logoCadastro from './assets/caderneta.png';
 
 function App() {
@@ -11,13 +11,13 @@ function App() {
 
   const [data, setData] = useState([]);
 
-  const pedidoGet = async()=>{
+  const pedidoGet = async () => {
     await axios.get(baseUrl)
-    .then(response=>{
-      setData(response.data);
-    }).catch(error=>{
-      console.log(error);
-    })
+      .then(response => {
+        setData(response.data);
+      }).catch(error => {
+        console.log(error);
+      })
   }
 
   /*
@@ -38,46 +38,53 @@ function App() {
 
   Mas queremos que ele esteja sempre atualizando neste projeto.
   */
-  useEffect(()=>{
+  useEffect(() => {
     pedidoGet();
   })
-  
+
   return (
-    <div className="App">
-      <br/>
-      <h3>Cadastro de Alunos</h3>
+    <div className="aluno-container">
       <header>
-        <img src={logoCadastro} alt="Cadastro"/>
-        <button className='btn btn-success'>Incluir Novo Aluno</button>
+        <div class="logo">Logo</div>
+        <nav>
+          <ul>
+            <li><a href="#">Cadastro de Alunos</a></li>
+          </ul>
+        </nav>
+        <div class="user-profile">Usuário</div>
       </header>
-      <table className="table table-bordered">
-        <thead>
-          <tr>
-            <th>Id</th>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Idade</th>
-            <th>Operação</th>
-          </tr>
-        </thead>
-        <tbody>
-          {/*Exibir os dados
-          O .map serve para mapear e o que precisamos de data
-          o tr com a key é para que a linha de cada aluno tenha seu priprio ID como chave unica*/}
-          {data.map(aluno=>(
-            <tr key={aluno.id}>
-              <td>{aluno.id}</td>
-              <td>{aluno.nome}</td>
-              <td>{aluno.email}</td>
-              <td>{aluno.idade}</td>
-              <td>
-                <button className='btn btn-primary'>Editar</button> {"   "}
-                <button className='btn btn-danger'>Excluir</button>
-              </td>
+      <section className='incluir-alunos'>
+        <img src={logoCadastro} alt="Cadastro" />
+        <button className='btn btn-success'>Incluir Novo Aluno</button>
+        <table className="table table-bordered">
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Idade</th>
+              <th>Operação</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {/*Exibir os dados
+          O .map serve para mapear e o que precisamos de data
+        o tr com a key é para que a linha de cada aluno tenha seu priprio ID como chave unica*/}
+            {data.map(aluno => (
+              <tr key={aluno.id}>
+                <td>{aluno.id}</td>
+                <td>{aluno.nome}</td>
+                <td>{aluno.email}</td>
+                <td>{aluno.idade}</td>
+                <td>
+                  <button className='btn btn-primary'>Editar</button> {"   "}
+                  <button className='btn btn-danger'>Excluir</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </div>
   );
 }
