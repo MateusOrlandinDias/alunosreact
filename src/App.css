@@ -6,6 +6,7 @@
   --cinza-escuro: #4F4C4C;
   --cinza-claro: #F7F4F4;
   --cinza-medio: #D9D9D9;
+  --cinza-preto: #363636;
       
   --fonte-link: #0084FF;
   --fonte-cinza: #666;
@@ -23,22 +24,34 @@
   /*Estilo*/
   .aluno-container{
     font-family: 'Open Sans', sans-serif;
-    background-color: var(--cinza-medio);
-  }
-  header{
     background-color: var(--cinza-claro);
+  }
+
+  header{
+    /* background-color: var(--cinza-claro); */
+    background-color: #f2f2f2;
+    background-image: linear-gradient(to right, #6da9e9, #c4c4c4, #6da9e9); /* gradiente de azul para cinza */
+    background-size: 200% 100%; /* tamanho do gradiente */
+    background-position: 0 0; /* posição de início */
+    background-clip: padding-box; /* aplica o background à área de preenchimento (padding) */
     display: grid;
     grid-template-columns: auto 1fr auto;
+    grid-gap: 5em;
     align-items: center;
     padding: 10px;
+    height: 100px; /* ou qualquer outra altura fixa */
   }
   .logo{
+    margin: 0 5em;
     grid-column: 1 / span 1;
+    position: absolute; /* define a posição absoluta da caixa de busca */
   }
   header nav{
+    display: flex;
+    margin: 0 5em;
     padding: 2em;
     grid-column: 2 / span 1;
-    text-align: center;
+    justify-content: center;
   }
   header nav ul{
     list-style: none;
@@ -46,7 +59,8 @@
     padding: 0;
   }
   header nav ul li{
-    font-size: 1.3em;
+    display: inline-block;
+    font-size: 1.2em;
     float: right;
     margin-right: 1.3em;
   }
@@ -58,7 +72,65 @@
   header nav ul li:hover {
     border-bottom: 2px solid green;
   }
+  header nav ul li a:hover {
+    color: black;
+  }
   .user-profile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5em;
     grid-column: 3 / span 1;
+    right: 0; /* alinha a terceira coluna à direita do elemento pai */
     text-align: right;
+    position: absolute; /* define a posição absoluta da caixa de busca */
+  }
+
+  .user-profile img{
+    height: 3em;
+    margin-right: 1em;
+  }
+
+  .user-profile p{
+    margin-top: 1em;
+  }
+
+  .aluno-container .alunos{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto 3em;
+  } 
+  
+  .aluno-container .alunos .incluir-alunos{
+    display: inline-block;
+    vertical-align: middle;
+    margin: 2em auto;
+  }
+
+  .aluno-container .alunos img{
+    height: 50px;
+  }
+
+  .aluno-container .alunos button{
+    height: 50px;
+    width: 200px;
+    border-radius: 5px;
+    border: 1px solid var(--cinza-escuro);
+    margin-left: 16px;
+    transition: border-color 0.5s;
+  }
+
+  .aluno-container .alunos button:hover{
+    border-color: var(--azul-claro);
+  }
+
+  .aluno-container .alunos table, th, td{
+    border: 1px solid black;
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding: 20px;
+    text-align: left;
   }
