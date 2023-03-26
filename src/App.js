@@ -26,8 +26,11 @@ function App() {
   /*Defini o State para abrir e fechar o modal e deixei o default em false 
   Para checkagem deste estado, devemos verificar o estado isOpen={modalIncluir}
   pelo componente Modal no return do HTML*/
-  const [modalIncluir, setModalIncluir]=useState(false);
+  const [modalIncluir, setModalIncluir] = useState(false);
 
+  /*useState de abertura do modal de editar, semelhante ao modar incluir. 
+  Também foi definido como padão false */
+  const [modalEditar, setModalEditar] = useState(false);
 
   /*Aqui eu defino um novo estado de um novo aluno (con infos zeradas)
   e defini uma função setAlunoSelecionado para enviar as informações desse novo
@@ -49,26 +52,48 @@ Ex final input:
 <input type="text" className='form-control' name="idade" onChange={handleChange}/>
 
    */
-  const [alunoSelecionado, setAlunoSelecionado]= useState({
-    id:'',
+  const [alunoSelecionado, setAlunoSelecionado] = useState({
+    id: '',
     nome: '',
     email: '',
     idade: ''
   })
 
+  /*Metodo para selecionar o aluno e abrir o modal editar */
+  const selecionarAluno = (aluno, opcao) => {
+    setAlunoSelecionado(aluno);
+    (opcao==="Editar") &&
+      abrirFecharModalEditar();
+
+  }
+
   /*Ao chamar esta função, é dado um toggle no modal de incluir */
-  const abrirFecharModalIncluir=()=>{
+  const abrirFecharModalIncluir = () => {
     setModalIncluir(!modalIncluir);
   }
 
+  /*Fução para mudar o state do modal na propriedade isOpen do front-end */
+  const abrirFecharModalEditar = () => {
+    setModalEditar(!modalEditar);
+  }
+
   /*Seguindo o state alunoSelecionado, abaixo temos a função handleChange
-  para pegar as informações do form Modal e enviar setar esta mudança de state */
-  const handleChange = e=>{
-    const {name, value} = e.target;
+  para pegar as informações do form Modal e enviar setar esta mudança de state 
+  
+  o handleChange é chamado sempre para editar um modal ou criar novas infos no modal...
+  Ele se linka com algum aluno atravez do .target pois cada linha daquelas tem uma key 
+  na tabela, o que ja deve linkar com o aluno certo, pelo que eu entendo.
+
+  E se não existir ele deve adicionar, conforme o spread "..." em setAlunoSelecionado mostra. 
+
+  Basicamente o handleChange conecta as mudanças feitas no modal com o post, put e tal
+  */
+  const handleChange = e => {
+    const { name, value } = e.target;
     setAlunoSelecionado({
       ...alunoSelecionado, [name]: value
     });
-    console.log(alunoSelecionado);
+    console.log(`Estamos no handle change, o aluno selecionado é: ${alunoSelecionado}`);
   }
 
   //Função GET API para att a tabela
@@ -82,17 +107,44 @@ Ex final input:
   }
 
   //Função POST API para inserir um novo aluno
-  const pedidoPost=async()=>{
+  const pedidoPost = async () => {
     console.log("Post");
     delete alunoSelecionado.id; //Deleta esse ID que tinha sido criado em branco para atualizar o ID criado pelo banco de dados
-    alunoSelecionado.idade=parseInt(alunoSelecionado.idade);//converte idade pra int
-      await axios.post(baseUrl, alunoSelecionado)
-    .then(response=>{
-      setData(data.concat(response.data)); //Usa o state data com sua função setData para atualizar o front
-      abrirFecharModalIncluir();//Da o toggle na tabela
-    }).catch(error=>{
-      console.log(error);
-    })
+    alunoSelecionado.idade = parseInt(alunoSelecionado.idade);//converte idade pra int
+    await axios.post(baseUrl, alunoSelecionado)
+      .then(response => {
+        setData(data.concat(response.data)); //Usa o state data com sua função setData para atualizar o front
+        abrirFecharModalIncluir();//Da o toggle na tabela
+      }).catch(error => {
+        console.log(error);
+      })
+  }
+
+  /*O put vai transformar a idade para int para começar,
+  fazer um axios.put pro base url+/id do aluno e vai atribuir todos os valores configurados agora, assim
+  atualizando as infos de tal aluno. 
+  
+  Verifica dentre os alunos qual foi alterado para atribuir as modificações... 
+  O comportamento funciona por conta do .map*/
+  const pedidoPut = async () => {
+    alunoSelecionado.idade = parseInt(alunoSelecionado.idade);
+    await axios.put(baseUrl + "/" + alunoSelecionado.id, alunoSelecionado)
+      .then(response => {
+        console.log(`Response put: ${response}}`);
+        var resposta = response.data;
+        var dadosAuxiliar = data;
+        dadosAuxiliar.map(aluno => {
+          if (aluno.id === alunoSelecionado.id) {
+            aluno.nome = resposta.nome;
+            aluno.email = resposta.email;
+            aluno.idade = resposta.idade;
+          }
+        });
+        abrirFecharModalEditar();
+        console.log(`Estamos no put, o aluno modificado e as modificações são: ${alunoSelecionado}`);
+      }).catch(error => {
+        console.log(error);
+      })
   }
 
   //Effect para requisição API e atualização de dados
@@ -132,14 +184,14 @@ Ex final input:
   return (
     <div className="aluno-container">
       <header>
-        <div class="logo"><img src={logoAlunosAPI} alt='Logo'/></div>
+        <div class="logo"><img src={logoAlunosAPI} alt='Logo' /></div>
         <nav>
           <ul>
             <li><a href="#">Cadastro de Alunos</a></li>
           </ul>
         </nav>
         <div class="user-profile">
-          <img src={User} alt='Logo'/>
+          <img src={User} alt='Logo' />
           <p>User</p>
           <></>
         </div>
@@ -148,8 +200,8 @@ Ex final input:
       <div className='alunos'>
         <div className='incluir-alunos'>
           <img src={logoCadastro} alt="Cadastro" />
-          <button className='btn btn-success' onClick={()=>abrirFecharModalIncluir()}>Incluir Novo Aluno</button>
-        </div>  
+          <button className='btn btn-success' onClick={() => abrirFecharModalIncluir()}>Incluir Novo Aluno</button>
+        </div>
         <table className="table table-bordered">
           <thead>
             <tr>
@@ -171,8 +223,8 @@ Ex final input:
                 <td>{aluno.email}</td>
                 <td>{aluno.idade}</td>
                 <td>
-                  <button className='btn btn-primary'>Editar</button> {"   "}
-                  <button className='btn btn-danger'>Excluir</button>
+                  <button className='btn btn-primary' onClick={() => selecionarAluno(aluno, "Editar")}>Editar</button> {"   "}
+                  <button className='btn btn-danger' onClick={() => selecionarAluno(aluno, "Excluir")}>Excluir</button>
                 </td>
               </tr>
             ))}
@@ -185,22 +237,49 @@ Ex final input:
         <ModalBody>
           <div className='form-group'>
             <label>Nome:</label>
-            <br/>
-            <input type="text" className='form-control' name="nome" onChange={handleChange}/>
-            <br/>
+            <br />
+            <input type="text" className='form-control' name="nome" onChange={handleChange} />
+            <br />
             <label>Email:</label>
-            <br/>
-            <input type="text" className='form-control' name="email" onChange={handleChange}/>
-            <br/>
+            <br />
+            <input type="text" className='form-control' name="email" onChange={handleChange} />
+            <br />
             <label>Idade:</label>
-            <br/>
-            <input type="text" className='form-control' name="idade" onChange={handleChange}/>
-            <br/>
+            <br />
+            <input type="text" className='form-control' name="idade" onChange={handleChange} />
+            <br />
           </div>
         </ModalBody>
         <ModalFooter>
-          <button className='btn btn-primary' onClick={()=>pedidoPost()}>Incluir</button>{"    "}
-          <button className='btn btn-danger' onClick={()=>abrirFecharModalIncluir()}>Cancelar</button>
+          <button className='btn btn-primary' onClick={() => pedidoPost()}>Incluir</button>{"    "}
+          <button className='btn btn-danger' onClick={() => abrirFecharModalIncluir()}>Cancelar</button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={modalEditar}>
+        <ModalHeader>Editar Aluno</ModalHeader>
+        <ModalBody>
+          <div className='form-group'>
+            <label>ID: </label>
+            <input type="text" className="form-control" readOnly
+              value={alunoSelecionado && alunoSelecionado.id} />
+            <br />
+            <label>Nome: </label><br />
+            {/*É necessário no value fazer a condição alunoSelecionado && alunoSelecionado.nome pois
+            pode ocorrer um erro de não haver alunosSelecionados, nesse caso ele só ignora o value*/}
+            <input type="text" className="form-control" name="nome" onChange={handleChange}
+              value={alunoSelecionado && alunoSelecionado.nome} /><br />
+            <label>Email: </label><br />
+            <input type="text" className="form-control" name="email" onChange={handleChange}
+              value={alunoSelecionado && alunoSelecionado.email} /><br />
+            <label>Idade: </label><br />
+            <input type="text" className="form-control" name="idade" onChange={handleChange}
+              value={alunoSelecionado && alunoSelecionado.idade} /><br />
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <button className='btn btn-primary' onClick={() => pedidoPut()}>Editar</button>{"    "}
+          <button className='btn btn-danger' onClick={() => abrirFecharModalEditar()}>Cancelar</button>
         </ModalFooter>
       </Modal>
     </div>
