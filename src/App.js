@@ -23,6 +23,9 @@ function App() {
    */
   const [data, setData] = useState([]);
 
+  /*Defini o state Update data para saber quando a pagina deve ser atualizada */
+  const [updateData, setUpdateData] = useState(true);
+
   /*Defini o State para abrir e fechar o modal e deixei o default em false 
   Para checkagem deste estado, devemos verificar o estado isOpen={modalIncluir}
   pelo componente Modal no return do HTML*/
@@ -31,6 +34,9 @@ function App() {
   /*useState de abertura do modal de editar, semelhante ao modar incluir. 
   Também foi definido como padão false */
   const [modalEditar, setModalEditar] = useState(false);
+
+  /*useState de abertura do modal de excluir alunos. */
+  const [modalExcluir, setModalExcluir] = useState(false);
 
   /*Aqui eu defino um novo estado de um novo aluno (con infos zeradas)
   e defini uma função setAlunoSelecionado para enviar as informações desse novo
@@ -59,12 +65,11 @@ Ex final input:
     idade: ''
   })
 
-  /*Metodo para selecionar o aluno e abrir o modal editar */
+  /*Metodo para selecionar o aluno e abrir o modal editar ou excluir 
+  pela linha da tabela do front*/
   const selecionarAluno = (aluno, opcao) => {
     setAlunoSelecionado(aluno);
-    (opcao==="Editar") &&
-      abrirFecharModalEditar();
-
+    (opcao === "Editar") ? abrirFecharModalEditar() : abrirFecharModalExcluir();
   }
 
   /*Ao chamar esta função, é dado um toggle no modal de incluir */
@@ -75,6 +80,11 @@ Ex final input:
   /*Fução para mudar o state do modal na propriedade isOpen do front-end */
   const abrirFecharModalEditar = () => {
     setModalEditar(!modalEditar);
+  }
+
+  /*Função para toggle no modal de excluir */
+  const abrirFecharModalExcluir = () => {
+    setModalExcluir(!modalExcluir);
   }
 
   /*Seguindo o state alunoSelecionado, abaixo temos a função handleChange
@@ -93,7 +103,7 @@ Ex final input:
     setAlunoSelecionado({
       ...alunoSelecionado, [name]: value
     });
-    console.log(`Estamos no handle change, o aluno selecionado é: ${alunoSelecionado}`);
+    //console.log(`Estamos no handle change, o aluno selecionado é: ${alunoSelecionado}`);
   }
 
   //Função GET API para att a tabela
@@ -108,12 +118,12 @@ Ex final input:
 
   //Função POST API para inserir um novo aluno
   const pedidoPost = async () => {
-    console.log("Post");
     delete alunoSelecionado.id; //Deleta esse ID que tinha sido criado em branco para atualizar o ID criado pelo banco de dados
     alunoSelecionado.idade = parseInt(alunoSelecionado.idade);//converte idade pra int
     await axios.post(baseUrl, alunoSelecionado)
       .then(response => {
         setData(data.concat(response.data)); //Usa o state data com sua função setData para atualizar o front
+        setUpdateData(true);
         abrirFecharModalIncluir();//Da o toggle na tabela
       }).catch(error => {
         console.log(error);
@@ -130,9 +140,14 @@ Ex final input:
     alunoSelecionado.idade = parseInt(alunoSelecionado.idade);
     await axios.put(baseUrl + "/" + alunoSelecionado.id, alunoSelecionado)
       .then(response => {
-        console.log(`Response put: ${response}}`);
         var resposta = response.data;
         var dadosAuxiliar = data;
+        /*Aqui a tabela (data do Hook do useState) é atualizada com as infos
+        que foram atualizadas na response da API
+        
+        Pergunta: Porque nao usar o setData?
+        R: eu ACHO que só vamos usar o setData nesta tabela para criar ou deletar
+        uma linha da tabela, caso contrario só altera a data já existente.*/
         dadosAuxiliar.map(aluno => {
           if (aluno.id === alunoSelecionado.id) {
             aluno.nome = resposta.nome;
@@ -140,8 +155,36 @@ Ex final input:
             aluno.idade = resposta.idade;
           }
         });
+        setUpdateData(true);
         abrirFecharModalEditar();
-        console.log(`Estamos no put, o aluno modificado e as modificações são: ${alunoSelecionado}`);
+      }).catch(error => {
+        console.log(error);
+      })
+  }
+
+  const pedidoDelete = async () => {
+    await axios.delete(baseUrl + "/" + alunoSelecionado.id, alunoSelecionado)
+      .then(response => {
+        /*Atualizando a tabela do front usando o usestate setData que mapeia essa tela 
+        Aplicamos um filtro nos dados excluindo o registro que coincide com o id que
+        foi retornado pela API usando o operador de desigualdade estrita (!==) que
+        verifica o valor e o tipo, neste caso ele veria que os ids são iguais 
+        (excluido e o que esta na tabela) e tiraria o id excluido da tabela.
+        
+        Tudo isso considerando que o delete na nossa API retorna o id do aluno exluido.
+        Perceba que: no data.filter estamos usando o "aluno=>" e o codigo entende o aluno.id
+        pelo que foi mapeado no front end no seguinte trecho de codigo:
+        
+        data.map(aluno => (
+                <tr key={aluno.id}>
+                  <td>{aluno.id}</td>
+                  <td>{aluno.nome}</td>
+                  <td>{aluno.email}</td>
+                  <td>{aluno.idade}</td>
+                  <td>*/
+        setData(data.filter(aluno => aluno.id !== response.data));
+        setUpdateData(true);
+        abrirFecharModalExcluir();
       }).catch(error => {
         console.log(error);
       })
@@ -168,10 +211,15 @@ Ex final input:
   }, [data])
   Ele só executaria pedidoGet() quando data fosse atualizada
 
-  Mas queremos que ele esteja sempre atualizando neste projeto.
+  Mas queremos que ele esteja sempre atualizando neste projeto enquanto tivermos testando.
+
+  UPDATE: foi feito um useState pra ver quando o pedidoget precisa ser chamado e por isso o useEffect confere esse state.
   */
   useEffect(() => {
-    pedidoGet();
+    if(updateData){
+      pedidoGet();
+      setUpdateData(false);
+    }
   })
 
   /*Estava com problema de renderização infinita que basicamente ele chamava pedidoPost 
@@ -180,7 +228,6 @@ Ex final input:
     o que deve ser feito:
     <button className='btn btn-primary' onClick={() => pedidoPost()}>Incluir</button>{"    "}
   */
-
   return (
     <div className="aluno-container">
       <header>
@@ -280,6 +327,17 @@ Ex final input:
         <ModalFooter>
           <button className='btn btn-primary' onClick={() => pedidoPut()}>Editar</button>{"    "}
           <button className='btn btn-danger' onClick={() => abrirFecharModalEditar()}>Cancelar</button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={modalExcluir}>
+        <ModalBody>
+          Confirma a exclusão deste(a) aluno(a): {alunoSelecionado && alunoSelecionado.nome}
+        </ModalBody>
+
+        <ModalFooter>
+          <button className='btn btn-danger' onClick={() => pedidoDelete()}> Sim </button>
+          <button className='btn btn-secondary' onClick={() => abrirFecharModalExcluir()}> Não </button>
         </ModalFooter>
       </Modal>
     </div>
